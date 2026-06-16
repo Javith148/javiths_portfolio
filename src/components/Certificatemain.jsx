@@ -1,5 +1,5 @@
 
-import './certificate.css'
+
 import cor1 from './assets/1.jpg'
 import cor2 from './assets/2.jpg'
 import cor3 from './assets/3.jpg'
