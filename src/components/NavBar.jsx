@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 
 const NavBar = () => {
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
+
+    // Hide Navbar on Admin routes
+    if (['/open', '/admin', '/super'].some(path => location.pathname.startsWith(path))) {
+        return null;
+    }
 
     const toggleMenu = () => setIsOpen(!isOpen);
     const closeMenu = () => setIsOpen(false);

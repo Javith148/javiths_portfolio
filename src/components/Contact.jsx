@@ -1,20 +1,61 @@
 import React, { useState } from 'react';
-import { FaLinkedin, FaGithub, FaInstagram, FaEnvelope, FaCalendarCheck, FaPaperPlane } from 'react-icons/fa';
+import { FaLinkedin, FaGithub, FaInstagram, FaEnvelope, FaCalendarCheck, FaPaperPlane, FaCheckCircle } from 'react-icons/fa';
 import bg from './assets/back2.png';
+import { API_BASE } from '../config/api';
 
 const Contact = () => {
     const [activeTab, setActiveTab] = useState("form");
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
+    const [statusMsg, setStatusMsg] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const phone = "919677987432";
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        const name = e.target.name.value;
-        const email = e.target.email.value;
-        const text = `Hello, I'm ${name}. My email is ${email}. Message: ${message}`;
+        setIsSubmitting(true);
+
+        const payload = {
+            name,
+            email,
+            subject: 'Portfolio Contact Form Inquiry',
+            message
+        };
+
+        // 1. Post to Express + Supabase backend
+        try {
+            await fetch(`${API_BASE}/contacts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            console.warn('Backend endpoint unreachable, storing message locally:', err);
+            const existing = JSON.parse(localStorage.getItem('admin_messages') || '[]');
+            const newMsg = {
+                id: Date.now().toString(),
+                ...payload,
+                is_read: false,
+                created_at: new Date().toISOString()
+            };
+            localStorage.setItem('admin_messages', JSON.stringify([newMsg, ...existing]));
+        }
+
+        setIsSubmitting(false);
+        setStatusMsg("Message sent successfully! Opening WhatsApp...");
+
+        // 2. Open WhatsApp link as well
+        const text = `Hello Javith, I'm ${name}. My email is ${email}. Message: ${message}`;
         const encodedText = encodeURIComponent(text);
         const url = `https://wa.me/${phone}?text=${encodedText}`;
-        window.open(url, "_blank");
+        setTimeout(() => {
+            window.open(url, "_blank");
+            setName("");
+            setEmail("");
+            setMessage("");
+            setStatusMsg(null);
+        }, 1500);
     };
 
     return (
@@ -42,13 +83,13 @@ const Contact = () => {
                 {/* Tabs */}
                 <div className="flex justify-center gap-4 mb-8">
                     <button 
-                        className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-300 ${activeTab === "quick" ? "bg-[#333] text-white shadow-lg" : "bg-[#222] text-gray-400 hover:bg-[#2a2a2a]"}`}
+                        className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-300 cursor-pointer ${activeTab === "quick" ? "bg-[#333] text-white shadow-lg" : "bg-[#222] text-gray-400 hover:bg-[#2a2a2a]"}`}
                         onClick={() => setActiveTab("quick")}
                     >
                         Quick connect
                     </button>
                     <button 
-                        className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-300 ${activeTab === "form" ? "bg-[#333] text-white shadow-lg" : "bg-[#222] text-gray-400 hover:bg-[#2a2a2a]"}`}
+                        className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-300 cursor-pointer ${activeTab === "form" ? "bg-[#333] text-white shadow-lg" : "bg-[#222] text-gray-400 hover:bg-[#2a2a2a]"}`}
                         onClick={() => setActiveTab("form")}
                     >
                         Fill a form
@@ -91,6 +132,12 @@ const Contact = () => {
                         </div>
                     ) : (
                         <form onSubmit={handleFormSubmit} className="max-w-[700px] mx-auto flex flex-col gap-5">
+                            {statusMsg && (
+                                <div className="p-4 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-300 text-sm flex items-center justify-center gap-2 animate-bounce">
+                                    <FaCheckCircle /> {statusMsg}
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-gray-400 text-sm font-medium ml-1">Name</label>
@@ -98,6 +145,8 @@ const Contact = () => {
                                         type="text" 
                                         name="name" 
                                         placeholder="Your name" 
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
                                         required 
                                         className="w-full bg-[#1f1f1f] text-white border border-white/10 p-3.5 rounded-xl text-sm focus:border-blue-500 focus:outline-none transition-colors placeholder:text-gray-600"
                                     />
@@ -108,6 +157,8 @@ const Contact = () => {
                                         type="email" 
                                         name="email" 
                                         placeholder="your.email@example.com" 
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                         required 
                                         className="w-full bg-[#1f1f1f] text-white border border-white/10 p-3.5 rounded-xl text-sm focus:border-blue-500 focus:outline-none transition-colors placeholder:text-gray-600"
                                     />
@@ -132,9 +183,10 @@ const Contact = () => {
 
                             <button 
                                 type="submit"
-                                className="w-full mt-2 bg-linear-to-r from-[#3a47d5] to-[#00c6ff] text-white py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-opacity hover:opacity-90 active:scale-[0.98]"
+                                disabled={isSubmitting}
+                                className="w-full mt-2 bg-linear-to-r from-[#3a47d5] to-[#00c6ff] text-white py-4 rounded-xl font-bold text-base flex items-center justify-center gap-3 transition-opacity hover:opacity-90 active:scale-[0.98] cursor-pointer disabled:opacity-50"
                             >
-                                <FaPaperPlane /> Send message
+                                <FaPaperPlane /> {isSubmitting ? 'Sending...' : 'Send message'}
                             </button>
                         </form>
                     )}

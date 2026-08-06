@@ -1,20 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import back2 from './assets/back2.png';
-import pro1 from './assets/pro1.png';
-import html from './assets/html.png';
-import css from './assets/css.png';
-import figma from './assets/figma.png';
-import pro2 from './assets/pro (1).png';
-import reactimg from './assets/react.png';
-import javascript from './assets/javascript.png';
-import pro3 from './assets/pro (2).png';
-import python from './assets/python.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import { API_BASE } from '../config/api';
 
 function Project() {
     const navigate = useNavigate();
+    const [projects, setProjects] = useState([]);
+
+    const getIconForTech = (techName, skillMap) => {
+        if (!techName) return 'https://skillicons.dev/icons?i=code';
+        const lower = techName.toLowerCase().trim();
+        if (skillMap[lower]) return skillMap[lower];
+
+        return `https://skillicons.dev/icons?i=${lower.replace(/[^a-z0-9]/g, '')}`;
+    };
 
     useEffect(() => {
         AOS.init({
@@ -22,34 +22,47 @@ function Project() {
             once: false,
             mirror: true
         });
+
+        // Dynamic API Fetch from Backend DB
+        Promise.all([
+            fetch(`${API_BASE}/projects`).then(r => r.json()).catch(() => ({ projects: [] })),
+            fetch(`${API_BASE}/skills`).then(r => r.json()).catch(() => ({ skills: [] }))
+        ]).then(([pData, sData]) => {
+            const skillMap = {};
+            if (sData.skills && Array.isArray(sData.skills)) {
+                sData.skills.forEach(s => {
+                    if (s.name && s.icon_url) {
+                        skillMap[s.name.toLowerCase().trim()] = s.icon_url;
+                    }
+                });
+            }
+
+            if (pData.projects && Array.isArray(pData.projects)) {
+                // Show ONLY projects selected by user (is_featured !== false)
+                const visibleProjects = pData.projects.filter(p => p.is_featured !== false);
+                const formatted = visibleProjects.map(p => ({
+                    title: p.title,
+                    description: p.description,
+                    shortDesc: p.short_desc || (p.description ? p.description.substring(0, 100) : ''),
+                    image: p.image_url || '',
+                    gradient: p.gradient || 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+                    liveLink: p.live_link || '#',
+                    githubLink: p.github_link || '#',
+                    stack: Array.isArray(p.tags) 
+                        ? p.tags.map(t => ({ name: t, icon: getIconForTech(t, skillMap) })) 
+                        : []
+                }));
+                setProjects(formatted);
+            }
+        });
     }, []);
 
-    const projects = [
-        {
-            title: "Curryard",
-            description: "Curryard is a creatively themed restaurant website built to attract food enthusiasts with a taste for adventure. It blends bold visuals, Halloween-inspired branding, and engaging UI elements to create a unique dining atmosphere online. From eye-catching menus to seamless reservation flow, every detail is crafted to reflect the eerie-yet-enticing vibe of the brand.",
-            shortDesc: "A spooky-themed restaurant landing page designed for food lovers who crave a unique dining experience.",
-            image: pro1,
-            gradient: "linear-gradient(175deg, #EB7B18 0%, #737373 100%)",
-            stack: [
-                { name: "HTML", icon: html },
-                { name: "CSS", icon: css },
-                { name: "Figma", icon: figma }
-            ]
-        },
-        {
-            title: "Portfolio",
-            description: "This portfolio is a React-powered web application designed to highlight my expertise in frontend development and UI/UX design. Crafted with a sleek, modern layout, it offers a seamless user experience with smooth scrolling, responsive design, and interactive elements.",
-            shortDesc: "A clean, responsive portfolio to showcase my skills, projects, and personal brand — built for smooth navigation and modern UI.",
-            image: pro2,
-            gradient: "linear-gradient(175deg, #7F17DA 0%, #737373 100%)",
-            stack: [
-                { name: "React", icon: reactimg },
-                { name: "Tailwind CSS", icon: "https://skillicons.dev/icons?i=tailwind" },
-                { name: "JavaScript", icon: javascript }
-            ]
+    const handleProjectClick = (proj) => {
+        const url = (proj.liveLink && proj.liveLink !== '#') ? proj.liveLink : ((proj.githubLink && proj.githubLink !== '#') ? proj.githubLink : null);
+        if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
         }
-    ];
+    };
 
     return (
         <section 
@@ -71,13 +84,15 @@ function Project() {
                         {/* Project Card (Image Side) */}
                         <div 
                             data-aos="slide-up"
-                            className="relative w-full max-w-[650px] h-[350px] md:h-[400px] p-2 bg-[#4D4C4C99] backdrop-blur-md rounded-[30px] border border-white/10 shadow-[inset_-4px_2px_4px_rgba(219,219,219,0.3)] group overflow-hidden"
+                            onClick={() => handleProjectClick(project)}
+                            title={project.liveLink && project.liveLink !== '#' ? `Open ${project.liveLink}` : 'Click to view project'}
+                            className="relative w-full max-w-[650px] h-[350px] md:h-[400px] p-2 bg-[#4D4C4C99] backdrop-blur-md rounded-[30px] border border-white/10 shadow-[inset_-4px_2px_4px_rgba(219,219,219,0.3)] group overflow-hidden cursor-pointer hover:border-purple-500/50 hover:shadow-[0_10px_35px_rgba(227,64,216,0.3)] transition-all duration-300"
                         >
                             <div 
                                 className="w-full h-full rounded-[25px] flex flex-col items-center p-8 transition-all duration-500"
                                 style={{ background: project.gradient }}
                             >
-                                <p className="text-white text-sm md:text-base text-justify font-medium mb-6">
+                                <p className="text-white text-sm md:text-base text-justify font-medium mb-6 line-clamp-3">
                                     {project.shortDesc}
                                 </p>
                                 <img 
@@ -92,7 +107,8 @@ function Project() {
                         <div className="flex-1 w-full max-w-[500px] space-y-6">
                             <h2 
                                 data-aos={index % 2 === 0 ? "fade-left" : "fade-right"} 
-                                className="text-3xl md:text-4xl font-bold"
+                                onClick={() => handleProjectClick(project)}
+                                className="text-3xl md:text-4xl font-bold cursor-pointer hover:text-[#e340d8] transition-colors"
                             >
                                 {project.title}
                             </h2>
@@ -105,21 +121,23 @@ function Project() {
                             </p>
 
                             {/* Tech Stack */}
-                            <div 
-                                data-aos="slide-up" 
-                                data-aos-delay="300" 
-                                className="flex flex-wrap gap-3 pt-4"
-                            >
-                                {project.stack.map((tech, i) => (
-                                    <div 
-                                        key={i}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#4D4C4C99] backdrop-blur-md border border-white/5 rounded-xl shadow-[inset_-1px_1px_4px_rgba(219,219,219,0.3)]"
-                                    >
-                                        <img src={tech.icon} alt={tech.name} className="w-5 h-5 object-contain" />
-                                        <span className="text-white text-xs font-medium">{tech.name}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            {project.stack && project.stack.length > 0 && (
+                                <div 
+                                    data-aos="slide-up" 
+                                    data-aos-delay="300" 
+                                    className="flex flex-wrap gap-3 pt-4"
+                                >
+                                    {project.stack.map((tech, i) => (
+                                        <div 
+                                            key={i}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#4D4C4C99] backdrop-blur-md border border-white/5 rounded-xl shadow-[inset_-1px_1px_4px_rgba(219,219,219,0.3)]"
+                                        >
+                                            {tech.icon && <img src={tech.icon} alt={tech.name} className="w-5 h-5 object-contain" />}
+                                            <span className="text-white text-xs font-medium">{tech.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}

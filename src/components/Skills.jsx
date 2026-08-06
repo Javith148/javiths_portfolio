@@ -1,50 +1,40 @@
-import React from 'react';
-import html from './assets/html.png'
-import css from './assets/css.png'
-import JavaScript from './assets/javascript.png'
-import react from './assets/react.png'
-import Figma from './assets/figma.png'
-import python from './assets/python.png'
-import mysql from './assets/mysql.png'
-import github from './assets/github.png'
-import git from './assets/git.png'
+import React, { useState, useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { useEffect } from 'react';
+import { API_BASE } from '../config/api';
 
 function Skills() {
+    const [skillsData, setSkillsData] = useState([]);
+
     useEffect(() => {
         AOS.init({
             duration: 1000,
             once: false,
             mirror: true,
         });
-    }, []);
 
-    const skillsData = [
-        { name: 'HTML', icon: html },
-        { name: 'CSS', icon: css },
-        { name: 'Javascript', icon: JavaScript },
-        { name: 'React', icon: react },
-        { name: 'Flutter', icon: 'https://skillicons.dev/icons?i=flutter' },
-        { name: 'Dart', icon: 'https://skillicons.dev/icons?i=dart' },
-        { name: 'Django', icon: 'https://skillicons.dev/icons?i=django' },
-        { name: 'Firebase', icon: 'https://skillicons.dev/icons?i=firebase' },
-        { name: 'MySQL', icon: mysql },
-        { name: 'Python', icon: python },
-        { name: 'Postman', icon: 'https://skillicons.dev/icons?i=postman' },
-        { name: 'REST API', icon: 'https://www.svgrepo.com/show/375531/api.svg' },
-        { name: 'Canva', icon: 'https://www.vectorlogo.zone/logos/canva/canva-icon.svg' },
-        { name: 'Tailwind CSS', icon: 'https://skillicons.dev/icons?i=tailwind' },
-        { name: 'Figma', icon: Figma },
-        { name: 'GitHub', icon: github },
-        { name: 'Git', icon: git },
-    ];
+        const loadSkills = () => {
+            fetch(`${API_BASE}/skills`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.skills && Array.isArray(data.skills)) {
+                        const formatted = data.skills.map(s => ({
+                            name: s.name,
+                            icon: s.icon_url || 'https://skillicons.dev/icons?i=code'
+                        }));
+                        setSkillsData(formatted);
+                    }
+                })
+                .catch(() => {});
+        };
+
+        loadSkills();
+    }, []);
 
     return (
         <section id="skills" className="w-full min-h-screen bg-[#0D0C0C] text-white flex flex-col items-center overflow-hidden py-24 font-['Outfit']">
 
-            {/* Header section with Flexbox centering */}
+            {/* Header section */}
             <div className="flex flex-col items-center text-center gap-4 mb-20 px-4">
                 <h6 data-aos="slide-up" className="text-white text-base font-extralight tracking-widest uppercase opacity-70">My Skills</h6>
                 <h1 data-aos="slide-up" className="text-4xl md:text-[50px] font-bold text-white drop-shadow-[0_4px_10px_rgba(255,255,255,0.1)]">
@@ -52,7 +42,7 @@ function Skills() {
                 </h1>
             </div>
 
-            {/* Skills Grid - Centered and Responsive */}
+            {/* Skills Grid */}
             <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 max-w-[1000px] px-6 mx-auto">
                 {skillsData.map((skill, index) => (
                     <div
@@ -79,7 +69,7 @@ function Skills() {
                 ))}
             </div>
 
-            {/* Skill Ribbons at the bottom - Crossing in the center using Flexbox/Grid logic */}
+            {/* Skill Ribbons */}
             <div className="w-full mt-40 flex flex-col items-center">
                 <div 
                     data-aos="slide-right"

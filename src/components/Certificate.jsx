@@ -1,70 +1,41 @@
-import React from 'react'
-import './certificate.css'
-import cor1 from './assets/1.jpg'
-import cor2 from './assets/2.jpg'
-import cor3 from './assets/3.jpg'
-import cor4 from './assets/4.jpg'
-import cor5 from './assets/5.jpg'
-import cor6 from './assets/6.jpg'
-import Certificatemain from './Certificatemain'
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import React1, { useState } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { useEffect } from 'react';
+import { API_BASE } from '../config/api';
 
 function Certificate() {
     const navigate = useNavigate();
+    const [certificates, setCertificates] = useState([]);
+
     useEffect(() => {
         AOS.init({
             duration: 1000,
             once: false,
             mirror: true
         });
-    }, []);
 
-    const certificates = [
-        {
-            title: "Introduction to artificial intelligence (AI)",
-            platform: "coursera",
-            description: "Gained foundational understanding of AI concepts including machine learning, neural networks, and intelligent systems. Explored real-world applications and ethical implications of AI.",
-            image: cor1
-        },
-        {
-            title: "javascript animation for website, Storytelling data visualization and games",
-            platform: "coursera",
-            description: "Learned how to create dynamic, smooth animations using JavaScript and libraries like GSAP. Gained experience in enhancing UX through transitions, motion effects, and interactive visuals.",
-            image: cor2
-        },
-        {
-            title: "Build a Twitter clone front-end with react",
-            platform: "coursera",
-            description: "Created a functional Twitter-like interface using React. Developed core features such as real-time feeds, tweet creation, likes, and UI responsiveness with component-based architecture.",
-            image: cor3
-        },
-        {
-            title: "Java for beginners : getting started",
-            platform: "coursera",
-            description: "Introduced to the fundamentals of Java programming including variables, data types, loops, and object-oriented principles. Built simple applications to understand core syntax and logic.",
-            image: cor4
-        },
-        {
-            title: "AWS S3 Basics",
-            platform: "coursera",
-            description: "Gained a foundational understanding of Amazon S3, including how to store, manage, and retrieve data securely. Learned about buckets, objects, permissions, versioning, and static website hosting.",
-            image: cor5
-        },
-        {
-            title: "Hosting a Static website (HTML/CSS/Javascript) in AWS S3",
-            platform: "coursera",
-            description: "Learned how to deploy static websites built with HTML, CSS, and JavaScript using Amazon S3. Configured bucket settings, enabled static hosting, and integrated custom domains for live deployment.",
-            image: cor6
-        }
-    ];
+        // Dynamic fetch from DB API
+        fetch(`${API_BASE}/certificates`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.certificates && Array.isArray(data.certificates)) {
+                    const visibleCerts = data.certificates.filter(c => c.is_featured !== false);
+                    const formatted = visibleCerts.map(c => ({
+                        title: c.title,
+                        platform: c.issuer || 'Coursera',
+                        description: c.description || 'Verified achievement certificate',
+                        image: c.image_url || ''
+                    }));
+                    setCertificates(formatted);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     return (
         <section id="certificates" className="w-full bg-[#0D0C0C] text-white flex flex-col items-center py-12 md:py-24 font-['Outfit'] overflow-hidden px-4 md:px-[4%]">
-            
+
             {/* Header */}
             <div className="flex flex-col items-center text-center gap-4 mb-20 animate-fade-in">
                 <h6 data-aos="slide-up" className="text-white text-base font-extralight tracking-widest uppercase opacity-70">Badges of Brilliance</h6>
@@ -76,7 +47,7 @@ function Certificate() {
             {/* Certificates Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 max-w-[1200px] w-full justify-items-center">
                 {certificates.slice(0, 3).map((cert, index) => (
-                    <div 
+                    <div
                         key={index}
                         data-aos="slide-up"
                         data-aos-delay={index * 50}
@@ -93,10 +64,10 @@ function Certificate() {
                                 {cert.description}
                             </p>
                         </div>
-                        
-                        <button 
+
+                        <button
                             onClick={() => window.open(cert.image, '_blank')}
-                            className="self-center w-[60px] h-[28px] bg-[#D9D9D9] hover:bg-white rounded-full text-[#0D0C0C] text-xs font-medium transition-all duration-300 transform active:scale-95"
+                            className="self-center w-[60px] h-[28px] bg-[#D9D9D9] hover:bg-white rounded-full text-[#0D0C0C] text-xs font-medium transition-all duration-300 transform active:scale-95 cursor-pointer"
                         >
                             View
                         </button>
@@ -105,7 +76,7 @@ function Certificate() {
             </div>
 
             {/* More Button */}
-            <div 
+            <div
                 data-aos="slide-up"
                 className="mt-20 flex items-center gap-4 cursor-pointer group"
                 onClick={() => navigate("/certificate")}
