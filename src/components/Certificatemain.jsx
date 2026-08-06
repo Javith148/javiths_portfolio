@@ -1,4 +1,19 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
+=======
+
+
+import cor1 from './assets/1.jpg'
+import cor2 from './assets/2.jpg'
+import cor3 from './assets/3.jpg'
+import cor4 from './assets/4.jpg'
+import cor5 from './assets/5.jpg'
+import cor6 from './assets/6.jpg'
+import cor7 from './assets/7.jpg'
+import cor8 from './assets/8.jpg'
+import cor9 from './assets/9.jpg'
+import cor10 from './assets/10.jpg'
+>>>>>>> c92762b482554af17e6c171776098db339414ef3
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Footer from './Footer';
