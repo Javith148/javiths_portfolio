@@ -1,6 +1,5 @@
-<<<<<<< HEAD
-import React, { useState, useEffect } from 'react';
-=======
+
+import React, { useState, useEffect } from 'react';=======
 
 
 import cor1 from './assets/1.jpg'
@@ -13,7 +12,7 @@ import cor7 from './assets/7.jpg'
 import cor8 from './assets/8.jpg'
 import cor9 from './assets/9.jpg'
 import cor10 from './assets/10.jpg'
->>>>>>> c92762b482554af17e6c171776098db339414ef3
+
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Footer from './Footer';
