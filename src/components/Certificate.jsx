@@ -1,6 +1,6 @@
-<<<<<<< HEAD
+
 import React, { useState, useEffect } from 'react';
-=======
+
 import React from 'react'
 
 import cor1 from './assets/1.jpg'
@@ -10,7 +10,7 @@ import cor4 from './assets/4.jpg'
 import cor5 from './assets/5.jpg'
 import cor6 from './assets/6.jpg'
 import Certificatemain from './Certificatemain'
->>>>>>> c92762b482554af17e6c171776098db339414ef3
+
 import { useNavigate } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
