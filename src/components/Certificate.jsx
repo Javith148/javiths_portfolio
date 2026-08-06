@@ -1,7 +1,7 @@
 
+import React, { useState, useEffect } from 'react';
 
 
-import React from 'react'
 
 import cor1 from './assets/1.jpg'
 import cor2 from './assets/2.jpg'
