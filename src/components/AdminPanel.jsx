@@ -206,7 +206,7 @@ const AdminPanel = () => {
     } catch (err) {}
   };
 
-  // TOGGLE VISIBILITY FOR PROJECT
+  // TOGGLE VISIBILITY FOR PROJECT (HOME PAGE VS ALL PROJECTS)
   const toggleProjectVisibility = async (p) => {
     const newStatus = p.is_featured === false ? true : false;
     const updated = { ...p, is_featured: newStatus };
@@ -217,7 +217,7 @@ const AdminPanel = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_featured: newStatus })
       });
-      showNotify(newStatus ? 'Project set to visible on main portfolio' : 'Project hidden from main portfolio');
+      showNotify(newStatus ? 'Project added to Home Page (<Project/>)' : 'Project removed from Home Page (Shows only on Projects page)');
     } catch (e) {}
   };
 
@@ -642,8 +642,8 @@ const AdminPanel = () => {
                           <span className="text-[10px] text-gray-400">{p.category}</span>
                         </div>
                       </div>
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${p.is_featured !== false ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
-                        {p.is_featured !== false ? 'Home ON' : 'Home OFF'}
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${p.is_featured !== false ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                        {p.is_featured !== false ? 'Home Page: ON' : 'Projects Page ONLY'}
                       </span>
                     </div>
                   ))}
@@ -681,16 +681,16 @@ const AdminPanel = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                      {/* Home Page Show Icon */}
+                      {/* Home Page Show Icon Button */}
                       <button 
                         onClick={() => toggleProjectVisibility(p)} 
-                        title={p.is_featured !== false ? "Visible on Home Page" : "Hidden from Home Page"}
+                        title={p.is_featured !== false ? "Visible on Home Page (<Project/> section in Nav.jsx)" : "Hidden from Home Page (Shows only on /projects)"}
                         className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
                           p.is_featured !== false ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-gray-800 text-gray-400 border border-white/10'
                         }`}
                       >
                         <FaHome className={p.is_featured !== false ? 'text-[#e340d8]' : 'text-gray-400'} />
-                        <span>{p.is_featured !== false ? 'Home ON' : 'Home OFF'}</span>
+                        <span>{p.is_featured !== false ? 'Home Page: ON' : 'Home Page: OFF'}</span>
                       </button>
 
                       {/* Eye Icon Visibility Button */}
@@ -847,8 +847,12 @@ const AdminPanel = () => {
               {/* VISIBILITY TOGGLE */}
               <div className="bg-[#1e1e1e] p-3 rounded-2xl border border-white/10 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-white block">Show on Main Portfolio Website?</span>
-                  <span className="text-[11px] text-gray-400">Toggle ON to display this project on live portfolio</span>
+                  <span className="font-bold text-white block">Show on Home Page (&lt;Project /&gt; Section)?</span>
+                  <span className="text-[11px] text-gray-400">
+                    {projectForm.is_featured 
+                      ? 'ON: Displays on Home Page & All Projects page (/projects)' 
+                      : 'OFF: Hidden from Home Page, displays ONLY on All Projects page (/projects)'}
+                  </span>
                 </div>
                 <input 
                   type="checkbox" 
