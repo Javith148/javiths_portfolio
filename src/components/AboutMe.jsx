@@ -4,13 +4,149 @@ import ImageSlider from './ImageSlider';
 import Footer from './Footer';
 import me from './assets/me.jpg';
 import backAbt from './assets/backAbt.png';
+import {
+    FaGraduationCap,
+    FaBriefcase,
+    FaRocket,
+    FaAward,
+    FaChevronLeft,
+    FaChevronRight,
+    FaCalendarAlt,
+    FaMapMarkerAlt
+} from 'react-icons/fa';
+
+import { API_BASE } from '../config/api';
+
+const DEFAULT_MORE_ABOUT = [
+    {
+        title: "🎨 Creative at Heart",
+        description: "I love bringing ideas to life visually before a single line of code is written. Whether it’s sketching wireframes on paper or designing sleek UI components in Figma, creativity is always at the core of what I do. Design, to me, isn’t just about how it looks — it’s about how it works."
+    },
+    {
+        title: "🎧 Fueled by Music",
+        description: "My best work is often accompanied by the rhythm of music. From chill lo-fi beats during deep focus sessions to energizing tracks when pushing deadlines — music keeps my mind sharp and my flow uninterrupted"
+    },
+    {
+        title: "🌙 Late-Night Dev Flow",
+        description: "There’s something magical about building features in the quiet of the night — when everything’s still, and ideas flow effortlessly. It’s my favorite time to get into deep focus and bring concepts to life."
+    },
+    {
+        title: "🎮 Play = Progress",
+        description: "Gaming is more than just fun — it sharpens my problem-solving mindset. Whether it’s strategy, storytelling, or UI in game menus, I find design inspiration in the digital worlds I explore."
+    },
+    {
+        title: "🌐 Passion for the Development",
+        description: "There’s something exciting about the web’s endless possibility. I love building things that live online — accessible, responsive, and open to the world. Each project is a chance to contribute something useful and beautiful to the internet."
+    }
+];
+
+const DEFAULT_JOURNEY = [
+    {
+        id: "01",
+        type: "Education",
+        title: "B.Tech / B.Sc in Computer Science",
+        organization: "XYZ University of Technology",
+        period: "2021 - 2025",
+        location: "Tamil Nadu, India",
+        description: "Specialized in Software Engineering, Data Structures, Mobile App Development, and Web Technologies. Graduated with high distinction."
+    },
+    {
+        id: "02",
+        type: "Work Experience",
+        title: "Flutter & React Developer Intern",
+        organization: "Tech Solutions Pvt Ltd",
+        period: "2023 - 2024",
+        location: "Remote / On-site",
+        description: "Built responsive cross-platform mobile apps using Flutter & REST APIs. Developed sleek admin dashboard components using React and modern CSS."
+    },
+    {
+        id: "03",
+        type: "Work Experience",
+        title: "Full Stack Developer",
+        organization: "Digital Innovations Lab",
+        period: "2024 - Present",
+        location: "Chennai, India",
+        description: "Architected Node.js & Supabase backends for high-performance applications. Integrated real-time features, JWT authentication, and cloud storage."
+    },
+    {
+        id: "04",
+        type: "Education",
+        title: "Full Stack Web & Mobile Certification",
+        organization: "Meta / Coursera Academy",
+        period: "2023",
+        location: "Online Certification",
+        description: "Completed intensive specialization covering advanced React, Flutter UI/UX design patterns, state management, and backend API integration."
+    },
+    {
+        id: "05",
+        type: "Milestone",
+        title: "Published Mobile & Web Apps",
+        organization: "Independent Projects",
+        period: "2024",
+        location: "Portfolio Ecosystem",
+        description: "Successfully launched dynamic full-stack web portfolio and standalone Flutter Admin Application connected to live cloud services."
+    }
+];
+
+const getJourneyIconAndBadge = (type) => {
+    switch (type) {
+        case 'Education':
+            return {
+                icon: <FaGraduationCap className="text-cyan-400 text-xl" />,
+                badgeStyle: "bg-cyan-500/10 text-cyan-300 border-cyan-500/30"
+            };
+        case 'Work Experience':
+            return {
+                icon: <FaBriefcase className="text-purple-400 text-xl" />,
+                badgeStyle: "bg-purple-500/10 text-purple-300 border-purple-500/30"
+            };
+        case 'Milestone':
+            return {
+                icon: <FaAward className="text-emerald-400 text-xl" />,
+                badgeStyle: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+            };
+        default:
+            return {
+                icon: <FaRocket className="text-red-400 text-xl" />,
+                badgeStyle: "bg-red-500/10 text-red-300 border-red-500/30"
+            };
+    }
+};
 
 function AboutMe() {
     const sectionRef = useRef(null);
+    const journeyContainerRef = useRef(null);
+    const journeyTrackRef = useRef(null);
     const [progress, setProgress] = useState(0);
+    const [journeyProgress, setJourneyProgress] = useState(0);
+    const [translateX, setTranslateX] = useState(0);
+
+    const [moreAboutContent, setMoreAboutContent] = useState(DEFAULT_MORE_ABOUT);
+    const [journeyItems, setJourneyItems] = useState(DEFAULT_JOURNEY);
 
     useEffect(() => {
-        const handleScroll = () => {
+        // Fetch dynamic About Me content & Journey items from Backend
+        fetch(`${API_BASE}/about/content`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.content) && data.content.length > 0) {
+                    setMoreAboutContent(data.content);
+                }
+            })
+            .catch(() => {});
+
+        fetch(`${API_BASE}/about/journey`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.journey) && data.journey.length > 0) {
+                    setJourneyItems(data.journey);
+                }
+            })
+            .catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        const updateJourneyScroll = () => {
             if (sectionRef.current) {
                 const rect = sectionRef.current.getBoundingClientRect();
                 const windowHeight = window.innerHeight;
@@ -19,36 +155,40 @@ function AboutMe() {
                 const p = Math.max(0, Math.min(1, (current / (total - windowHeight))));
                 setProgress(p);
             }
+
+            if (journeyContainerRef.current && journeyTrackRef.current) {
+                const trackWidth = journeyTrackRef.current.scrollWidth;
+                const viewportWidth = window.innerWidth;
+                const padding = viewportWidth < 768 ? 40 : 140;
+                const maxScrollX = Math.max(0, trackWidth - viewportWidth + padding);
+
+                // Set container height dynamically so horizontal scroll completes right before unpinning
+                const totalHeight = maxScrollX + window.innerHeight;
+                journeyContainerRef.current.style.height = `${totalHeight}px`;
+
+                const rect = journeyContainerRef.current.getBoundingClientRect();
+                const currentScroll = -rect.top;
+                const clampedScroll = Math.max(0, Math.min(maxScrollX, currentScroll));
+
+                setTranslateX(clampedScroll);
+                setJourneyProgress(maxScrollX > 0 ? clampedScroll / maxScrollX : 0);
+            }
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+
+        window.addEventListener('scroll', updateJourneyScroll, { passive: true });
+        window.addEventListener('resize', updateJourneyScroll);
+        updateJourneyScroll();
+
+        return () => {
+            window.removeEventListener('scroll', updateJourneyScroll);
+            window.removeEventListener('resize', updateJourneyScroll);
+        };
     }, []);
 
-    const moreAboutContent = [
-        {
-            title: "🎨 Creative at Heart",
-            description: "I love bringing ideas to life visually before a single line of code is written. Whether it’s sketching wireframes on paper or designing sleek UI components in Figma, creativity is always at the core of what I do. Design, to me, isn’t just about how it looks — it’s about how it works."
-        },
-        {
-            title: "🎧 Fueled by Music",
-            description: "My best work is often accompanied by the rhythm of music. From chill lo-fi beats during deep focus sessions to energizing tracks when pushing deadlines — music keeps my mind sharp and my flow uninterrupted"
-        },
-        {
-            title: "🌙 Late-Night Dev Flow",
-            description: "There’s something magical about building features in the quiet of the night — when everything’s still, and ideas flow effortlessly. It’s my favorite time to get into deep focus and bring concepts to life."
-        },
-        {
-            title: "🎮 Play = Progress",
-            description: "Gaming is more than just fun — it sharpens my problem-solving mindset. Whether it’s strategy, storytelling, or UI in game menus, I find design inspiration in the digital worlds I explore."
-        },
-        {
-            title: "🌐 Passion for the Devlopement",
-            description: "There’s something exciting about the web’s endless possibility. I love building things that live online — accessible, responsive, and open to the world. Each project is a chance to contribute something useful and beautiful to the internet."
-        }
-    ];
+
 
     return (
-        <div className="w-full min-h-screen bg-black font-['Outfit'] overflow-x-hidden">
+        <div className="w-full min-h-screen bg-black font-['Outfit'] overflow-x-clip">
             <NavBar />
 
             {/* Hero Section */}
@@ -114,15 +254,15 @@ function AboutMe() {
                             </div>
 
                             {/* Floating Image Unit - Sit perfectly on top of the bar */}
-                            <div 
+                            <div
                                 className="absolute z-[100] transition-all duration-75 ease-out pointer-events-none"
                                 style={{ top: `calc(${progress * 100}% - ${window.innerWidth < 768 ? '24px' : '40px'})` }}
                             >
                                 <div className="relative w-12 h-12 md:w-20 md:h-20 flex items-center justify-center">
                                     {/* Perfect Circle Portrait Container */}
                                     <div className="w-12 h-12 md:w-20 md:h-20 rounded-full border-2 border-[#1a1a1a] shadow-[0_0_25px_rgba(0,0,0,0.8)] overflow-hidden bg-[#1a1a1a] relative z-10 pointer-events-auto">
-                                        <img 
-                                            src={me} 
+                                        <img
+                                            src={me}
                                             alt="Javith portrait"
                                             className="w-full h-full object-cover transition-transform duration-300"
                                             style={{ transform: `rotate(${progress * 1000}deg)` }}
@@ -146,6 +286,104 @@ function AboutMe() {
                                 </p>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* My Journey Section (Sticky Vertical-to-Horizontal Scroll) */}
+            <section ref={journeyContainerRef} className="relative w-full bg-[#0a0a0a] border-t border-white/10">
+                {/* Sticky Viewport Container */}
+                <div className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden relative">
+                    {/* Top Progress Line */}
+                    <div className="w-full bg-white/10 h-1 absolute top-0 left-0 z-20">
+                        <div
+                            className="h-full bg-linear-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF] transition-all duration-75"
+                            style={{ width: `${journeyProgress * 100}%` }}
+                        />
+                    </div>
+
+                    {/* Ambient background glow */}
+                    <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
+                    <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-red-600/10 blur-[120px] rounded-full pointer-events-none" />
+
+                    <div className="max-w-[1400px] w-full mx-auto space-y-8 relative z-10 py-6">
+                        {/* Header */}
+                        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 px-6 md:px-16">
+                            <div>
+                                <h6 className="text-[#B3B3B3] text-sm uppercase tracking-[0.2em] mb-1">My Timeline</h6>
+                                <h2 className="text-white text-4xl md:text-6xl font-light">
+                                    My <span className="bg-linear-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF] bg-clip-text text-transparent animate-gradient font-bold">Journey</span>
+                                </h2>
+                                <p className="text-gray-400 text-sm md:text-base mt-2 max-w-xl">
+                                    Scroll to step through the milestones, education, and experiences that shaped my developer story
+                                </p>
+                            </div>
+
+                            {/* Progress Percentage Indicator Badge */}
+                            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md">
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#e340d8] animate-pulse" />
+                                <span className="text-xs text-gray-300 font-semibold uppercase tracking-wider">
+                                    Journey Scroll: {Math.round(journeyProgress * 100)}%
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Horizontal Cards Track translated by translateX */}
+                        <div
+                            ref={journeyTrackRef}
+                            className="flex gap-6 px-6 md:px-16 transition-transform duration-75 ease-out will-change-transform"
+                            style={{
+                                transform: `translateX(-${translateX}px)`
+                            }}
+                        >
+                            {journeyItems.map((item, index) => {
+                                const { icon, badgeStyle } = getJourneyIconAndBadge(item.type);
+                                const displayId = String(index + 1).padStart(2, '0');
+                                return (
+                                    <div
+                                        key={item.id || index}
+                                        className="shrink-0 w-[300px] sm:w-[360px] md:w-[420px] bg-[#141414]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 hover:border-purple-500/50 hover:shadow-[0_10px_35px_rgba(227,64,216,0.2)] transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
+                                    >
+                                        <div>
+                                            {/* Card Header: ID & Badge */}
+                                            <div className="flex items-center justify-between mb-6">
+                                                <span className="text-3xl font-black text-white/10 group-hover:text-white/30 transition-colors">
+                                                    {displayId}
+                                                </span>
+                                                <div className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-2 ${badgeStyle}`}>
+                                                    {icon}
+                                                    <span>{item.type}</span>
+                                                </div>
+                                            </div>
+
+                                        {/* Title & Organization */}
+                                        <h3 className="text-white text-xl md:text-2xl font-bold mb-2 group-hover:text-[#e340d8] transition-colors leading-snug">
+                                            {item.title}
+                                        </h3>
+                                        <h4 className="text-gray-300 text-sm font-medium mb-4">
+                                            {item.organization}
+                                        </h4>
+
+                                        {/* Metadata: Period & Location */}
+                                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400 mb-5">
+                                            <div className="flex items-center gap-1.5">
+                                                <FaCalendarAlt className="text-purple-400 text-xs" />
+                                                <span>{item.period}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <FaMapMarkerAlt className="text-red-400 text-xs" />
+                                                <span>{item.location}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Description */}
+                                        <p className="text-gray-400 text-xs md:text-sm leading-relaxed text-justify">
+                                            {item.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ); })}
+                        </div>
                     </div>
                 </div>
             </section>

@@ -44,6 +44,8 @@ const AdminPanel = () => {
   const [skills, setSkills] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [aboutContent, setAboutContent] = useState([]);
+  const [journeyItems, setJourneyItems] = useState([]);
   
   const [notification, setNotification] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -75,6 +77,21 @@ const AdminPanel = () => {
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [editingCert, setEditingCert] = useState(null);
   const [certForm, setCertForm] = useState({ title: '', issuer: '', issue_date: '2024', credential_url: '', image_url: '', description: '', is_featured: true });
+
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [editingAbout, setEditingAbout] = useState(null);
+  const [aboutForm, setAboutForm] = useState({ title: '', description: '' });
+
+  const [isJourneyModalOpen, setIsJourneyModalOpen] = useState(false);
+  const [editingJourney, setEditingJourney] = useState(null);
+  const [journeyForm, setJourneyForm] = useState({
+    type: 'Education',
+    title: '',
+    organization: '',
+    period: '',
+    location: '',
+    description: ''
+  });
 
   const showNotify = (msg, type = 'success') => {
     setNotification({ msg, type });
@@ -120,11 +137,13 @@ const AdminPanel = () => {
   // Fetch All Data from Backend API
   const fetchData = async () => {
     try {
-      const [pRes, sRes, cRes, mRes] = await Promise.all([
+      const [pRes, sRes, cRes, mRes, abtRes, jrnRes] = await Promise.all([
         fetch(`${API_BASE}/projects`),
         fetch(`${API_BASE}/skills`),
         fetch(`${API_BASE}/certificates`),
-        fetch(`${API_BASE}/contacts`)
+        fetch(`${API_BASE}/contacts`),
+        fetch(`${API_BASE}/about/content`),
+        fetch(`${API_BASE}/about/journey`)
       ]);
 
       if (pRes.ok) {
@@ -142,6 +161,14 @@ const AdminPanel = () => {
       if (mRes.ok) {
         const mData = await mRes.json();
         setMessages(mData.messages || []);
+      }
+      if (abtRes.ok) {
+        const abtData = await abtRes.json();
+        setAboutContent(abtData.content || []);
+      }
+      if (jrnRes.ok) {
+        const jrnData = await jrnRes.json();
+        setJourneyItems(jrnData.journey || []);
       }
     } catch (err) {}
   };
@@ -183,7 +210,10 @@ const AdminPanel = () => {
 
   // REORDER ITEMS
   const moveItem = async (type, index, direction) => {
-    let list = type === 'projects' ? [...projects] : type === 'skills' ? [...skills] : [...certificates];
+    let list = type === 'projects' ? [...projects] : 
+               type === 'skills' ? [...skills] : 
+               type === 'certificates' ? [...certificates] : 
+               type === 'about' ? [...aboutContent] : [...journeyItems];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= list.length) return;
 
@@ -193,11 +223,14 @@ const AdminPanel = () => {
 
     if (type === 'projects') setProjects(list);
     else if (type === 'skills') setSkills(list);
-    else setCertificates(list);
+    else if (type === 'certificates') setCertificates(list);
+    else if (type === 'about') setAboutContent(list);
+    else setJourneyItems(list);
 
     const orderedIds = list.map(item => item.id);
     try {
-      await fetch(`${API_BASE}/${type}/reorder`, {
+      const endpoint = type === 'about' ? 'about/content' : type === 'journey' ? 'about/journey' : type;
+      await fetch(`${API_BASE}/${endpoint}/reorder`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderedIds })
@@ -459,6 +492,116 @@ const AdminPanel = () => {
     }
   };
 
+  // --- About Content Modal Handlers ---
+  const handleOpenAboutModal = (item = null) => {
+    if (item) {
+      setEditingAbout(item);
+      setAboutForm({ title: item.title || '', description: item.description || '' });
+    } else {
+      setEditingAbout(null);
+      setAboutForm({ title: '', description: '' });
+    }
+    setIsAboutModalOpen(true);
+  };
+
+  const handleSaveAbout = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingAbout) {
+        await fetch(`${API_BASE}/about/content/${editingAbout.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(aboutForm)
+        });
+        showNotify('About section block updated!');
+      } else {
+        await fetch(`${API_BASE}/about/content`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(aboutForm)
+        });
+        showNotify('New About block added!');
+      }
+      fetchData();
+    } catch (err) {
+      fetchData();
+    }
+    setIsAboutModalOpen(false);
+  };
+
+  const handleDeleteAbout = async (id) => {
+    if (!window.confirm('Delete this About content block?')) return;
+    try {
+      await fetch(`${API_BASE}/about/content/${id}`, { method: 'DELETE' });
+      showNotify('About content block deleted');
+      fetchData();
+    } catch (err) {
+      setAboutContent(aboutContent.filter(a => a.id !== id));
+    }
+  };
+
+  // --- Journey Timeline Modal Handlers ---
+  const handleOpenJourneyModal = (item = null) => {
+    if (item) {
+      setEditingJourney(item);
+      setJourneyForm({
+        type: item.type || 'Education',
+        title: item.title || '',
+        organization: item.organization || '',
+        period: item.period || '',
+        location: item.location || '',
+        description: item.description || ''
+      });
+    } else {
+      setEditingJourney(null);
+      setJourneyForm({
+        type: 'Education',
+        title: '',
+        organization: '',
+        period: '',
+        location: '',
+        description: ''
+      });
+    }
+    setIsJourneyModalOpen(true);
+  };
+
+  const handleSaveJourney = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingJourney) {
+        await fetch(`${API_BASE}/about/journey/${editingJourney.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(journeyForm)
+        });
+        showNotify('Journey item updated!');
+      } else {
+        await fetch(`${API_BASE}/about/journey`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(journeyForm)
+        });
+        showNotify('New Journey item added!');
+      }
+      fetchData();
+    } catch (err) {
+      fetchData();
+    }
+    setIsJourneyModalOpen(false);
+  };
+
+  const handleDeleteJourney = async (id) => {
+    if (!window.confirm('Delete this Journey timeline card?')) return;
+    try {
+      await fetch(`${API_BASE}/about/journey/${id}`, { method: 'DELETE' });
+      showNotify('Journey item deleted');
+      fetchData();
+    } catch (err) {
+      setJourneyItems(journeyItems.filter(j => j.id !== id));
+    }
+  };
+
   const unreadCount = messages.filter(m => !m.is_read).length;
 
   if (!token) {
@@ -521,6 +664,8 @@ const AdminPanel = () => {
           <button onClick={() => setActiveTab('projects')} className={`w-full px-4 py-3 rounded-2xl font-semibold text-sm flex items-center justify-between ${activeTab === 'projects' ? 'bg-gradient-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF]' : 'text-gray-400 hover:bg-white/10'}`}><span>Projects</span><span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">{projects.length}</span></button>
           <button onClick={() => setActiveTab('skills')} className={`w-full px-4 py-3 rounded-2xl font-semibold text-sm flex items-center justify-between ${activeTab === 'skills' ? 'bg-gradient-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF]' : 'text-gray-400 hover:bg-white/10'}`}><span>Skills</span><span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">{skills.length}</span></button>
           <button onClick={() => setActiveTab('certificates')} className={`w-full px-4 py-3 rounded-2xl font-semibold text-sm flex items-center justify-between ${activeTab === 'certificates' ? 'bg-gradient-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF]' : 'text-gray-400 hover:bg-white/10'}`}><span>Certificates</span><span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">{certificates.length}</span></button>
+          <button onClick={() => setActiveTab('about')} className={`w-full px-4 py-3 rounded-2xl font-semibold text-sm flex items-center justify-between ${activeTab === 'about' ? 'bg-gradient-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF]' : 'text-gray-400 hover:bg-white/10'}`}><span>About Content</span><span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">{aboutContent.length}</span></button>
+          <button onClick={() => setActiveTab('journey')} className={`w-full px-4 py-3 rounded-2xl font-semibold text-sm flex items-center justify-between ${activeTab === 'journey' ? 'bg-gradient-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF]' : 'text-gray-400 hover:bg-white/10'}`}><span>My Journey</span><span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold">{journeyItems.length}</span></button>
         </aside>
 
         {/* Content */}
@@ -814,6 +959,83 @@ const AdminPanel = () => {
             </div>
           )}
 
+          {/* ABOUT ME CONTENT BLOCKS ("Beyond the Code") */}
+          {activeTab === 'about' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">Beyond the Code Cards</h2>
+                  <p className="text-xs text-gray-400">Manage the creative interest blocks on your About Me page</p>
+                </div>
+                <button onClick={() => handleOpenAboutModal()} className="px-4 py-2 bg-gradient-to-r from-[#d91a1a] to-[#e340d8] rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-lg hover:opacity-90">
+                  <FaPlus /> Add Block
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {aboutContent.map((item, index) => (
+                  <div key={item.id || index} className="bg-white/5 border border-white/10 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-purple-500/40 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col gap-1">
+                        <button disabled={index === 0} onClick={() => moveItem('about', index, 'up')} className={`p-1.5 rounded-lg border text-xs ${index === 0 ? 'opacity-30 border-white/5 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 border-white/10 cursor-pointer'}`}><FaArrowUp /></button>
+                        <button disabled={index === aboutContent.length - 1} onClick={() => moveItem('about', index, 'down')} className={`p-1.5 rounded-lg border text-xs ${index === aboutContent.length - 1 ? 'opacity-30 border-white/5 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 border-white/10 cursor-pointer'}`}><FaArrowDown /></button>
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-white">{item.title}</h3>
+                        <p className="text-xs text-gray-300 max-w-xl leading-relaxed">{item.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => handleOpenAboutModal(item)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer"><FaEdit /> Edit</button>
+                      <button onClick={() => handleDeleteAbout(item.id)} className="p-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer"><FaTrash /> Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* MY JOURNEY TIMELINE ITEMS */}
+          {activeTab === 'journey' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">My Journey Timeline Cards</h2>
+                  <p className="text-xs text-gray-400">Manage education, experience, and development milestone cards</p>
+                </div>
+                <button onClick={() => handleOpenJourneyModal()} className="px-4 py-2 bg-gradient-to-r from-[#d91a1a] to-[#e340d8] rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-lg hover:opacity-90">
+                  <FaPlus /> Add Journey Item
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {journeyItems.map((item, index) => (
+                  <div key={item.id || index} className="bg-white/5 border border-white/10 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-purple-500/40 transition-all">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <div className="flex flex-col gap-1">
+                        <button disabled={index === 0} onClick={() => moveItem('journey', index, 'up')} className={`p-1.5 rounded-lg border text-xs ${index === 0 ? 'opacity-30 border-white/5 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 border-white/10 cursor-pointer'}`}><FaArrowUp /></button>
+                        <button disabled={index === journeyItems.length - 1} onClick={() => moveItem('journey', index, 'down')} className={`p-1.5 rounded-lg border text-xs ${index === journeyItems.length - 1 ? 'opacity-30 border-white/5 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20 border-white/10 cursor-pointer'}`}><FaArrowDown /></button>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">{item.type}</span>
+                          <span className="text-xs text-gray-400">{item.period}</span>
+                        </div>
+                        <h3 className="text-base font-bold text-white">{item.title}</h3>
+                        <p className="text-xs text-gray-300 font-medium">{item.organization} {item.location ? `• ${item.location}` : ''}</p>
+                        <p className="text-xs text-gray-400 max-w-xl leading-relaxed">{item.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => handleOpenJourneyModal(item)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer"><FaEdit /> Edit</button>
+                      <button onClick={() => handleDeleteJourney(item.id)} className="p-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer"><FaTrash /> Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
 
@@ -1017,6 +1239,74 @@ const AdminPanel = () => {
               <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
                 <button type="button" onClick={() => setIsCertModalOpen(false)} className="px-5 py-2.5 bg-white/10 rounded-xl font-semibold cursor-pointer">Cancel</button>
                 <button type="submit" className="px-6 py-2.5 bg-gradient-to-r from-[#d91a1a] to-[#e340d8] font-bold rounded-xl cursor-pointer">Save Certificate</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- ADD / EDIT ABOUT CONTENT MODAL --- */}
+      {isAboutModalOpen && (
+        <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#141414] border border-white/20 rounded-3xl max-w-[500px] w-full p-6 text-white space-y-4">
+            <h3 className="text-xl font-bold">{editingAbout ? 'Edit Beyond the Code Block' : 'Add Beyond the Code Block'}</h3>
+            <form onSubmit={handleSaveAbout} className="space-y-4 text-xs">
+              <div>
+                <label className="text-gray-300 font-semibold mb-1 block">Title * (e.g. 🎨 Creative at Heart)</label>
+                <input type="text" required placeholder="Title" value={aboutForm.title} onChange={e => setAboutForm({...aboutForm, title: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10" />
+              </div>
+              <div>
+                <label className="text-gray-300 font-semibold mb-1 block">Description *</label>
+                <textarea required rows={4} placeholder="Description details..." value={aboutForm.description} onChange={e => setAboutForm({...aboutForm, description: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10" />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+                <button type="button" onClick={() => setIsAboutModalOpen(false)} className="px-5 py-2.5 bg-white/10 rounded-xl font-semibold cursor-pointer">Cancel</button>
+                <button type="submit" className="px-6 py-2.5 bg-gradient-to-r from-[#d91a1a] to-[#e340d8] font-bold rounded-xl cursor-pointer">Save Block</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- ADD / EDIT JOURNEY MODAL --- */}
+      {isJourneyModalOpen && (
+        <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#141414] border border-white/20 rounded-3xl max-w-[540px] w-full p-6 text-white max-h-[90vh] overflow-y-auto space-y-4">
+            <h3 className="text-xl font-bold">{editingJourney ? 'Edit Journey Item' : 'Add Journey Item'}</h3>
+            <form onSubmit={handleSaveJourney} className="space-y-4 text-xs">
+              <div>
+                <label className="text-gray-300 font-semibold mb-1 block">Category / Type *</label>
+                <select value={journeyForm.type} onChange={e => setJourneyForm({...journeyForm, type: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10 text-white">
+                  <option value="Education">Education</option>
+                  <option value="Work Experience">Work Experience</option>
+                  <option value="Milestone">Milestone</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-gray-300 font-semibold mb-1 block">Title * (e.g. Full Stack Developer)</label>
+                <input type="text" required placeholder="Title" value={journeyForm.title} onChange={e => setJourneyForm({...journeyForm, title: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10" />
+              </div>
+              <div>
+                <label className="text-gray-300 font-semibold mb-1 block">Organization / School *</label>
+                <input type="text" required placeholder="Organization (e.g. University / Company)" value={journeyForm.organization} onChange={e => setJourneyForm({...journeyForm, organization: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 font-semibold mb-1 block">Period (e.g. 2023 - Present)</label>
+                  <input type="text" placeholder="2023 - Present" value={journeyForm.period} onChange={e => setJourneyForm({...journeyForm, period: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10" />
+                </div>
+                <div>
+                  <label className="text-gray-300 font-semibold mb-1 block">Location (e.g. Chennai, India)</label>
+                  <input type="text" placeholder="Location" value={journeyForm.location} onChange={e => setJourneyForm({...journeyForm, location: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10" />
+                </div>
+              </div>
+              <div>
+                <label className="text-gray-300 font-semibold mb-1 block">Description *</label>
+                <textarea required rows={3} placeholder="Details about this milestone or role..." value={journeyForm.description} onChange={e => setJourneyForm({...journeyForm, description: e.target.value})} className="w-full bg-[#222] p-3 rounded-xl border border-white/10" />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+                <button type="button" onClick={() => setIsJourneyModalOpen(false)} className="px-5 py-2.5 bg-white/10 rounded-xl font-semibold cursor-pointer">Cancel</button>
+                <button type="submit" className="px-6 py-2.5 bg-gradient-to-r from-[#d91a1a] to-[#e340d8] font-bold rounded-xl cursor-pointer">Save Item</button>
               </div>
             </form>
           </div>
