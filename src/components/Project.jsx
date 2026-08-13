@@ -39,7 +39,9 @@ function Project() {
 
             if (pData.projects && Array.isArray(pData.projects)) {
                 // Show ONLY projects selected by user (is_featured !== false)
-                const visibleProjects = pData.projects.filter(p => p.is_featured !== false);
+               const visibleProjects = pData.projects
+    .filter(p => p.is_featured !== false)
+    .slice(0, 2);
                 const formatted = visibleProjects.map(p => ({
                     title: p.title,
                     description: p.description,
@@ -48,8 +50,8 @@ function Project() {
                     gradient: p.gradient || 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
                     liveLink: p.live_link || '#',
                     githubLink: p.github_link || '#',
-                    stack: Array.isArray(p.tags) 
-                        ? p.tags.map(t => ({ name: t, icon: getIconForTech(t, skillMap) })) 
+                    stack: Array.isArray(p.tags)
+                        ? p.tags.map(t => ({ name: t, icon: getIconForTech(t, skillMap) }))
                         : []
                 }));
                 setProjects(formatted);
@@ -65,7 +67,7 @@ function Project() {
     };
 
     return (
-        <section 
+        <section
             id="Project"
             className="w-full bg-[#0D0C0C] text-white flex flex-col items-center py-24 font-['Outfit'] overflow-hidden px-4 md:px-[4%]"
         >
@@ -77,27 +79,27 @@ function Project() {
             {/* Projects Container */}
             <div className="w-full max-w-[1200px] flex flex-col gap-32 md:gap-40 mb-20">
                 {projects.map((project, index) => (
-                    <div 
-                        key={index} 
+                    <div
+                        key={index}
                         className={`flex flex-col gap-12 items-center ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}
                     >
                         {/* Project Card (Image Side) */}
-                        <div 
+                        <div
                             data-aos="slide-up"
                             onClick={() => handleProjectClick(project)}
                             title={project.liveLink && project.liveLink !== '#' ? `Open ${project.liveLink}` : 'Click to view project'}
                             className="relative w-full max-w-[650px] h-[350px] md:h-[400px] p-2 bg-[#4D4C4C99] backdrop-blur-md rounded-[30px] border border-white/10 shadow-[inset_-4px_2px_4px_rgba(219,219,219,0.3)] group overflow-hidden cursor-pointer hover:border-purple-500/50 hover:shadow-[0_10px_35px_rgba(227,64,216,0.3)] transition-all duration-300"
                         >
-                            <div 
+                            <div
                                 className="w-full h-full rounded-[25px] flex flex-col items-center p-8 transition-all duration-500"
                                 style={{ background: project.gradient }}
                             >
                                 <p className="text-white text-sm md:text-base text-justify font-medium mb-6 line-clamp-3">
                                     {project.shortDesc}
                                 </p>
-                                <img 
-                                    src={project.image} 
-                                    alt={project.title} 
+                                <img
+                                    src={project.image}
+                                    alt={project.title}
                                     className="w-full max-w-[500px] h-[220px] md:h-[260px] object-cover rounded-xl shadow-2xl transition-transform duration-500 group-hover:scale-105"
                                 />
                             </div>
@@ -105,16 +107,16 @@ function Project() {
 
                         {/* Project Info (Text Side) */}
                         <div className="flex-1 w-full max-w-[500px] space-y-6">
-                            <h2 
-                                data-aos={index % 2 === 0 ? "fade-left" : "fade-right"} 
+                            <h2
+                                data-aos={index % 2 === 0 ? "fade-left" : "fade-right"}
                                 onClick={() => handleProjectClick(project)}
                                 className="text-3xl md:text-4xl font-bold cursor-pointer hover:text-[#e340d8] transition-colors"
                             >
                                 {project.title}
                             </h2>
-                            <p 
-                                data-aos={index % 2 === 0 ? "fade-left" : "fade-right"} 
-                                data-aos-delay="200" 
+                            <p
+                                data-aos={index % 2 === 0 ? "fade-left" : "fade-right"}
+                                data-aos-delay="200"
                                 className="text-[#B3B3B3] text-justify leading-relaxed"
                             >
                                 {project.description}
@@ -122,13 +124,13 @@ function Project() {
 
                             {/* Tech Stack */}
                             {project.stack && project.stack.length > 0 && (
-                                <div 
-                                    data-aos="slide-up" 
-                                    data-aos-delay="300" 
+                                <div
+                                    data-aos="slide-up"
+                                    data-aos-delay="300"
                                     className="flex flex-wrap gap-3 pt-4"
                                 >
                                     {project.stack.map((tech, i) => (
-                                        <div 
+                                        <div
                                             key={i}
                                             className="flex items-center gap-2 px-4 py-2 bg-[#4D4C4C99] backdrop-blur-md border border-white/5 rounded-xl shadow-[inset_-1px_1px_4px_rgba(219,219,219,0.3)]"
                                         >
@@ -144,7 +146,7 @@ function Project() {
             </div>
 
             {/* More Button */}
-            <div 
+            <div
                 data-aos="slide-up"
                 className="mt-12 flex items-center gap-4 cursor-pointer group"
                 onClick={() => navigate("/projects")}
