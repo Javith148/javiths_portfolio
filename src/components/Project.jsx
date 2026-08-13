@@ -94,7 +94,7 @@ function Project() {
                                 className="w-full h-full rounded-[25px] flex flex-col items-center p-8 transition-all duration-500"
                                 style={{ background: project.gradient }}
                             >
-                               <p className="text-white text-sm md:text-base text-justify font-medium mb-6 line-clamp-3 -translate-y-[10px]">
+                               <p className="text-white text-sm md:text-base text-justify font-medium mb-6 line-clamp-3 -translate-y-[20px]">
     {project.shortDesc}
 </p>
                                 <img
