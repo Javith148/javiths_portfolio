@@ -251,7 +251,7 @@ const AdminPanel = () => {
   // --- Project Modal ---
   const handleOpenProjectModal = (project = null) => {
     if (project) {
-      const g = project.gradient || 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)';
+      const g = project.gradient || project.color || 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)';
       const extracted = extractHexColors(g);
       setColor1(extracted.c1);
       setColor2(extracted.c2);
@@ -265,6 +265,7 @@ const AdminPanel = () => {
         live_link: project.live_link || '',
         github_link: project.github_link || '',
         gradient: g,
+        color: g,
         tags: Array.isArray(project.tags) ? project.tags : (typeof project.tags === 'string' ? project.tags.split(',').map(t => t.trim()) : []),
         is_featured: project.is_featured !== undefined ? project.is_featured : true
       });
@@ -281,6 +282,7 @@ const AdminPanel = () => {
         live_link: '',
         github_link: '',
         gradient: 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+        color: 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
         tags: [],
         is_featured: true
       });
@@ -292,13 +294,13 @@ const AdminPanel = () => {
     setColor1(c1);
     setColor2(c2);
     const gradStr = `linear-gradient(175deg, ${c1} 0%, ${c2} 100%)`;
-    setProjectForm(prev => ({ ...prev, gradient: gradStr }));
+    setProjectForm(prev => ({ ...prev, gradient: gradStr, color: gradStr }));
   };
 
   const setSolidBannerColor = (hexColor) => {
     setColor1(hexColor);
     setColor2(hexColor);
-    setProjectForm(prev => ({ ...prev, gradient: hexColor }));
+    setProjectForm(prev => ({ ...prev, gradient: hexColor, color: hexColor }));
   };
 
   const toggleSkillInProject = (skillName) => {

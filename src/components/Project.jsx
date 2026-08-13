@@ -38,16 +38,23 @@ function Project() {
             }
 
             if (pData.projects && Array.isArray(pData.projects)) {
+                const defaultGradients = [
+                    'linear-gradient(175deg, #EB7B18 0%, #737373 100%)',
+                    'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+                    'linear-gradient(175deg, #4851FF 0%, #737373 100%)',
+                    'linear-gradient(175deg, #30B45C 0%, #737373 100%)',
+                    'linear-gradient(175deg, #D91A1A 0%, #222222 100%)'
+                ];
                 // Show ONLY projects selected by user (is_featured !== false)
-               const visibleProjects = pData.projects
-    .filter(p => p.is_featured !== false)
-    .slice(0, 2);
-                const formatted = visibleProjects.map(p => ({
+                const visibleProjects = pData.projects
+                    .filter(p => p.is_featured !== false)
+                    .slice(0, 2);
+                const formatted = visibleProjects.map((p, idx) => ({
                     title: p.title,
                     description: p.description,
                     shortDesc: p.short_desc || (p.description ? p.description.substring(0, 100) : ''),
                     image: p.image_url || '',
-                    gradient: p.gradient || 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+                    gradient: p.gradient || p.color || defaultGradients[idx % defaultGradients.length],
                     liveLink: p.live_link || '#',
                     githubLink: p.github_link || '#',
                     stack: Array.isArray(p.tags)
@@ -94,9 +101,9 @@ function Project() {
                                 className="w-full h-full rounded-[25px] flex flex-col items-center p-8 transition-all duration-500"
                                 style={{ background: project.gradient }}
                             >
-                    <p className="relative z-10 text-white text-sm md:text-base text-justify font-medium mb-6 -translate-y-[10px]">
-    {project.shortDesc}
-</p>
+                                <p className="relative z-10 text-white text-sm md:text-base text-justify font-medium mb-6 -translate-y-[10px]">
+                                    {project.shortDesc}
+                                </p>
                                 <img
                                     src={project.image}
                                     alt={project.title}

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 
 
@@ -12,6 +13,7 @@ import cor7 from './assets/7.jpg'
 import cor8 from './assets/8.jpg'
 import cor9 from './assets/9.jpg'
 import cor10 from './assets/10.jpg'
+
 
 import AOS from 'aos';
 import 'aos/dist/aos.css';
@@ -43,7 +45,7 @@ function Certificatemain() {
                     setCertificates(formatted);
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     return (

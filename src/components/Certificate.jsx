@@ -42,7 +42,7 @@ function Certificate() {
                     setCertificates(formatted);
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     return (

@@ -37,14 +37,21 @@ function Projectmain() {
             }
 
             if (pData.projects && Array.isArray(pData.projects)) {
+                const defaultGradients = [
+                    'linear-gradient(175deg, #EB7B18 0%, #737373 100%)',
+                    'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+                    'linear-gradient(175deg, #4851FF 0%, #737373 100%)',
+                    'linear-gradient(175deg, #30B45C 0%, #737373 100%)',
+                    'linear-gradient(175deg, #D91A1A 0%, #222222 100%)'
+                ];
                 // Filter only chosen/featured projects
                 const visibleProjects = pData.projects.filter(p => p.is_featured !== false);
-                const formatted = visibleProjects.map(p => ({
+                const formatted = visibleProjects.map((p, idx) => ({
                     title: p.title,
                     description: p.description,
                     shortDesc: p.short_desc || (p.description ? p.description.substring(0, 100) : ''),
                     image: p.image_url || '',
-                    gradient: p.gradient || 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+                    gradient: p.gradient || p.color || defaultGradients[idx % defaultGradients.length],
                     liveLink: p.live_link || '#',
                     githubLink: p.github_link || '#',
                     stack: Array.isArray(p.tags) 
