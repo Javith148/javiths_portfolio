@@ -269,6 +269,14 @@ const AdminPanel = () => {
     } catch (e) {}
   };
 
+  const DEFAULT_GRADIENTS = [
+    'linear-gradient(175deg, #EB7B18 0%, #737373 100%)',
+    'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+    'linear-gradient(175deg, #4851FF 0%, #737373 100%)',
+    'linear-gradient(175deg, #30B45C 0%, #737373 100%)',
+    'linear-gradient(175deg, #D91A1A 0%, #222222 100%)'
+  ];
+
   // Helper to extract hex colors from a gradient string
   const extractHexColors = (gradStr) => {
     if (!gradStr) return { c1: '#7F17DA', c2: '#737373' };
@@ -303,8 +311,10 @@ const AdminPanel = () => {
         is_featured: project.is_featured !== undefined ? project.is_featured : true
       });
     } else {
-      setColor1('#7F17DA');
-      setColor2('#737373');
+      const defaultGrad = DEFAULT_GRADIENTS[projects.length % DEFAULT_GRADIENTS.length] || 'linear-gradient(175deg, #EB7B18 0%, #737373 100%)';
+      const extracted = extractHexColors(defaultGrad);
+      setColor1(extracted.c1);
+      setColor2(extracted.c2);
       setEditingProject(null);
       setProjectForm({
         title: '',
@@ -314,8 +324,8 @@ const AdminPanel = () => {
         image_url: '',
         live_link: '',
         github_link: '',
-        gradient: 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
-        color: 'linear-gradient(175deg, #7F17DA 0%, #737373 100%)',
+        gradient: defaultGrad,
+        color: defaultGrad,
         tags: [],
         is_featured: true
       });
@@ -1103,6 +1113,24 @@ const AdminPanel = () => {
                 <div className="w-full h-20 rounded-xl border border-white/20 p-3 flex flex-col items-center justify-center font-bold text-white shadow-inner transition-all duration-300" style={{ background: projectForm.gradient }}>
                   <span className="text-sm">{projectForm.title || 'Project Banner Background'}</span>
                   <span className="text-[10px] font-normal opacity-80 mt-1">{projectForm.gradient}</span>
+                </div>
+
+                {/* Direct Custom Color / Gradient Code Input */}
+                <div>
+                  <label className="text-gray-300 font-semibold mb-1 block">Custom Color or Gradient String (e.g. #FF5733 or linear-gradient(...))</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. linear-gradient(175deg, #FF5733 0%, #33FF57 100%) or #FF5733" 
+                    value={projectForm.gradient} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      setProjectForm(prev => ({ ...prev, gradient: val, color: val }));
+                      const ext = extractHexColors(val);
+                      setColor1(ext.c1);
+                      setColor2(ext.c2);
+                    }} 
+                    className="w-full bg-[#121212] p-2.5 rounded-xl border border-white/10 text-xs font-mono text-gray-200" 
+                  />
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
