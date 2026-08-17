@@ -73,7 +73,7 @@ function AboutMe() {
             .then(res => res.json())
             .then(data => {
                 if (data.success && Array.isArray(data.content)) {
-                    setMoreAboutContent(data.content);
+                    setMoreAboutContent([...data.content].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
                 }
             })
             .catch(() => {});
@@ -82,7 +82,7 @@ function AboutMe() {
             .then(res => res.json())
             .then(data => {
                 if (data.success && Array.isArray(data.journey)) {
-                    setJourneyItems(data.journey);
+                    setJourneyItems([...data.journey].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
                 }
             })
             .catch(() => {});
