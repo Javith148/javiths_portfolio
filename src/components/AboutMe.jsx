@@ -17,77 +17,6 @@ import {
 
 import { API_BASE } from '../config/api';
 
-const DEFAULT_MORE_ABOUT = [
-    {
-        title: "🎨 Creative at Heart",
-        description: "I love bringing ideas to life visually before a single line of code is written. Whether it’s sketching wireframes on paper or designing sleek UI components in Figma, creativity is always at the core of what I do. Design, to me, isn’t just about how it looks — it’s about how it works."
-    },
-    {
-        title: "🎧 Fueled by Music",
-        description: "My best work is often accompanied by the rhythm of music. From chill lo-fi beats during deep focus sessions to energizing tracks when pushing deadlines — music keeps my mind sharp and my flow uninterrupted"
-    },
-    {
-        title: "🌙 Late-Night Dev Flow",
-        description: "There’s something magical about building features in the quiet of the night — when everything’s still, and ideas flow effortlessly. It’s my favorite time to get into deep focus and bring concepts to life."
-    },
-    {
-        title: "🎮 Play = Progress",
-        description: "Gaming is more than just fun — it sharpens my problem-solving mindset. Whether it’s strategy, storytelling, or UI in game menus, I find design inspiration in the digital worlds I explore."
-    },
-    {
-        title: "🌐 Passion for the Development",
-        description: "There’s something exciting about the web’s endless possibility. I love building things that live online — accessible, responsive, and open to the world. Each project is a chance to contribute something useful and beautiful to the internet."
-    }
-];
-
-const DEFAULT_JOURNEY = [
-    {
-        id: "01",
-        type: "Education",
-        title: "B.Tech / B.Sc in Computer Science",
-        organization: "XYZ University of Technology",
-        period: "2021 - 2025",
-        location: "Tamil Nadu, India",
-        description: "Specialized in Software Engineering, Data Structures, Mobile App Development, and Web Technologies. Graduated with high distinction."
-    },
-    {
-        id: "02",
-        type: "Work Experience",
-        title: "Flutter & React Developer Intern",
-        organization: "Tech Solutions Pvt Ltd",
-        period: "2023 - 2024",
-        location: "Remote / On-site",
-        description: "Built responsive cross-platform mobile apps using Flutter & REST APIs. Developed sleek admin dashboard components using React and modern CSS."
-    },
-    {
-        id: "03",
-        type: "Work Experience",
-        title: "Full Stack Developer",
-        organization: "Digital Innovations Lab",
-        period: "2024 - Present",
-        location: "Chennai, India",
-        description: "Architected Node.js & Supabase backends for high-performance applications. Integrated real-time features, JWT authentication, and cloud storage."
-    },
-    {
-        id: "04",
-        type: "Education",
-        title: "Full Stack Web & Mobile Certification",
-        organization: "Meta / Coursera Academy",
-        period: "2023",
-        location: "Online Certification",
-        description: "Completed intensive specialization covering advanced React, Flutter UI/UX design patterns, state management, and backend API integration."
-    },
-    {
-        id: "05",
-        type: "Milestone",
-        title: "Published Mobile & Web Apps",
-        organization: "Independent Projects",
-        period: "2024",
-        location: "Portfolio Ecosystem",
-        description: "Successfully launched dynamic full-stack web portfolio and standalone Flutter Admin Application connected to live cloud services."
-    }
-];
-
 const getJourneyIconAndBadge = (type) => {
     switch (type) {
         case 'Education':
@@ -121,15 +50,29 @@ function AboutMe() {
     const [journeyProgress, setJourneyProgress] = useState(0);
     const [translateX, setTranslateX] = useState(0);
 
-    const [moreAboutContent, setMoreAboutContent] = useState(DEFAULT_MORE_ABOUT);
-    const [journeyItems, setJourneyItems] = useState(DEFAULT_JOURNEY);
+    const [moreAboutContent, setMoreAboutContent] = useState([]);
+    const [journeyItems, setJourneyItems] = useState([]);
+
+    const handleMoveJourney = (direction) => {
+        if (!journeyContainerRef.current) return;
+        const containerTop = journeyContainerRef.current.getBoundingClientRect().top + window.scrollY;
+        const scrollAmount = 420;
+
+        if (direction === 'prev') {
+            const target = Math.max(containerTop, window.scrollY - scrollAmount);
+            window.scrollTo({ top: target, behavior: 'smooth' });
+        } else {
+            const target = window.scrollY + scrollAmount;
+            window.scrollTo({ top: target, behavior: 'smooth' });
+        }
+    };
 
     useEffect(() => {
         // Fetch dynamic About Me content & Journey items from Backend
         fetch(`${API_BASE}/about/content`)
             .then(res => res.json())
             .then(data => {
-                if (data.success && Array.isArray(data.content) && data.content.length > 0) {
+                if (data.success && Array.isArray(data.content)) {
                     setMoreAboutContent(data.content);
                 }
             })
@@ -138,7 +81,7 @@ function AboutMe() {
         fetch(`${API_BASE}/about/journey`)
             .then(res => res.json())
             .then(data => {
-                if (data.success && Array.isArray(data.journey) && data.journey.length > 0) {
+                if (data.success && Array.isArray(data.journey)) {
                     setJourneyItems(data.journey);
                 }
             })
@@ -178,12 +121,14 @@ function AboutMe() {
         window.addEventListener('scroll', updateJourneyScroll, { passive: true });
         window.addEventListener('resize', updateJourneyScroll);
         updateJourneyScroll();
+        const timer = setTimeout(updateJourneyScroll, 100);
 
         return () => {
+            clearTimeout(timer);
             window.removeEventListener('scroll', updateJourneyScroll);
             window.removeEventListener('resize', updateJourneyScroll);
         };
-    }, []);
+    }, [journeyItems]);
 
 
 
@@ -315,16 +260,39 @@ function AboutMe() {
                                     My <span className="bg-linear-to-r from-[#d91a1a] via-[#e340d8] to-[#4851FF] bg-clip-text text-transparent animate-gradient font-bold">Journey</span>
                                 </h2>
                                 <p className="text-gray-400 text-sm md:text-base mt-2 max-w-xl">
-                                    Scroll to step through the milestones, education, and experiences that shaped my developer story
+                                    Scroll or use move buttons to step through the milestones, education, and experiences that shaped my developer story
                                 </p>
                             </div>
 
-                            {/* Progress Percentage Indicator Badge */}
-                            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md">
-                                <span className="w-2.5 h-2.5 rounded-full bg-[#e340d8] animate-pulse" />
-                                <span className="text-xs text-gray-300 font-semibold uppercase tracking-wider">
-                                    Journey Scroll: {Math.round(journeyProgress * 100)}%
-                                </span>
+                            {/* Move Controls & Progress Indicator */}
+                            <div className="flex items-center gap-3">
+                                {/* Move Left Button */}
+                                <button
+                                    onClick={() => handleMoveJourney('prev')}
+                                    disabled={journeyProgress <= 0.01}
+                                    className="w-10 h-10 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-white transition-all cursor-pointer shadow-lg active:scale-95"
+                                    title="Move Left"
+                                >
+                                    <FaChevronLeft className="text-sm" />
+                                </button>
+
+                                {/* Move Right Button */}
+                                <button
+                                    onClick={() => handleMoveJourney('next')}
+                                    disabled={journeyProgress >= 0.99}
+                                    className="w-10 h-10 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-white transition-all cursor-pointer shadow-lg active:scale-95"
+                                    title="Move Right"
+                                >
+                                    <FaChevronRight className="text-sm" />
+                                </button>
+
+                                {/* Progress Percentage Indicator Badge */}
+                                <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full backdrop-blur-md">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-[#e340d8] animate-pulse" />
+                                    <span className="text-xs text-gray-300 font-semibold uppercase tracking-wider">
+                                        {Math.round(journeyProgress * 100)}%
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
