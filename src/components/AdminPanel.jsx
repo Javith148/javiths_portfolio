@@ -350,23 +350,29 @@ const AdminPanel = () => {
   const handleSaveProject = async (e) => {
     e.preventDefault();
     try {
-      if (editingProject) {
-        await fetch(`${API_BASE}/projects/${editingProject.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(projectForm)
-        });
-        showNotify('Project updated successfully!');
+      const url = editingProject ? `${API_BASE}/projects/${editingProject.id}` : `${API_BASE}/projects`;
+      const method = editingProject ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projectForm)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showNotify(editingProject ? 'Project updated successfully! 🚀' : 'New project added successfully! 🚀');
+        if (data.project) {
+          if (editingProject) {
+            setProjects(prev => prev.map(p => String(p.id) === String(editingProject.id) ? { ...p, ...data.project } : p));
+          } else {
+            setProjects(prev => [data.project, ...prev]);
+          }
+        }
       } else {
-        await fetch(`${API_BASE}/projects`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(projectForm)
-        });
-        showNotify('New project added successfully!');
+        showNotify(data.error || 'Failed to save project', 'error');
       }
       fetchData();
     } catch (err) {
+      showNotify('Failed to save project: ' + err.message, 'error');
       fetchData();
     }
     setIsProjectModalOpen(false);
